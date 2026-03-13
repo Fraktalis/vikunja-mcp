@@ -283,7 +283,7 @@ describe("MCP Tool Handlers", () => {
       const response = await callTool("tasks_list", {});
       const data = parseResponse(response);
 
-      expect(mockGet).toHaveBeenCalledWith("/tasks/all", expect.any(Object));
+      expect(mockGet).toHaveBeenCalledWith("/tasks", expect.any(Object));
       expect(data.tasks).toEqual(mockTasks);
     });
 
@@ -336,7 +336,7 @@ describe("MCP Tool Handlers", () => {
         filter: "done = false",
       });
 
-      expect(mockGet).toHaveBeenCalledWith("/tasks/all", {
+      expect(mockGet).toHaveBeenCalledWith("/tasks", {
         page: 2,
         per_page: 25,
         s: "bug",
