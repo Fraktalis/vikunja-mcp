@@ -231,7 +231,7 @@ server.tool(
         );
       } else {
         // Get all tasks
-        response = await client.get<Task[]>("/tasks/all", query);
+        response = await client.get<Task[]>("/tasks", query);
       }
 
       return formatResponse({ tasks: response.data, pagination: response.pagination });
