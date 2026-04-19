@@ -57,7 +57,7 @@ function formatError(error: unknown): {
 // Ping Tool (for testing)
 // ============================================================================
 
-server.tool("ping", "Test if the MCP server is working", {}, async () => {
+server.registerTool("ping", { description: "Test if the MCP server is working" }, async () => {
   return formatResponse({
     status: "ok",
     message: "pong",
@@ -69,14 +69,16 @@ server.tool("ping", "Test if the MCP server is working", {}, async () => {
 // Project Tools
 // ============================================================================
 
-server.tool(
+server.registerTool(
   "projects_list",
-  "List all projects the user has access to",
   {
-    page: z.number().optional().describe("Page number for pagination (default: 1)"),
-    perPage: z.number().optional().describe("Number of items per page (default: 50)"),
-    search: z.string().optional().describe("Search projects by title"),
-    isArchived: z.boolean().optional().describe("If true, also return archived projects"),
+    description: "List all projects the user has access to",
+    inputSchema: {
+      page: z.number().optional().describe("Page number for pagination (default: 1)"),
+      perPage: z.number().optional().describe("Number of items per page (default: 50)"),
+      search: z.string().optional().describe("Search projects by title"),
+      isArchived: z.boolean().optional().describe("If true, also return archived projects"),
+    },
   },
   async (args) => {
     try {
@@ -94,11 +96,13 @@ server.tool(
   }
 );
 
-server.tool(
+server.registerTool(
   "projects_get",
-  "Get a single project by ID",
   {
-    projectId: z.number().describe("The project ID"),
+    description: "Get a single project by ID",
+    inputSchema: {
+      projectId: z.number().describe("The project ID"),
+    },
   },
   async (args) => {
     try {
@@ -111,14 +115,16 @@ server.tool(
   }
 );
 
-server.tool(
+server.registerTool(
   "projects_create",
-  "Create a new project",
   {
-    title: z.string().describe("Project title (required)"),
-    description: z.string().optional().describe("Project description"),
-    color: z.string().optional().describe("Hex color (e.g., 'ff0000')"),
-    parentProjectId: z.number().optional().describe("Parent project ID for nesting"),
+    description: "Create a new project",
+    inputSchema: {
+      title: z.string().describe("Project title (required)"),
+      description: z.string().optional().describe("Project description"),
+      color: z.string().optional().describe("Hex color (e.g., 'ff0000')"),
+      parentProjectId: z.number().optional().describe("Parent project ID for nesting"),
+    },
   },
   async (args) => {
     try {
@@ -136,16 +142,18 @@ server.tool(
   }
 );
 
-server.tool(
+server.registerTool(
   "projects_update",
-  "Update an existing project",
   {
-    projectId: z.number().describe("The project ID (required)"),
-    title: z.string().optional().describe("New project title"),
-    description: z.string().optional().describe("New project description"),
-    color: z.string().optional().describe("New hex color"),
-    isArchived: z.boolean().optional().describe("Archive or unarchive the project"),
-    isFavorite: z.boolean().optional().describe("Mark as favorite"),
+    description: "Update an existing project",
+    inputSchema: {
+      projectId: z.number().describe("The project ID (required)"),
+      title: z.string().optional().describe("New project title"),
+      description: z.string().optional().describe("New project description"),
+      color: z.string().optional().describe("New hex color"),
+      isArchived: z.boolean().optional().describe("Archive or unarchive the project"),
+      isFavorite: z.boolean().optional().describe("Mark as favorite"),
+    },
   },
   async (args) => {
     try {
@@ -165,11 +173,13 @@ server.tool(
   }
 );
 
-server.tool(
+server.registerTool(
   "projects_delete",
-  "Delete a project",
   {
-    projectId: z.number().describe("The project ID to delete"),
+    description: "Delete a project",
+    inputSchema: {
+      projectId: z.number().describe("The project ID to delete"),
+    },
   },
   async (args) => {
     try {
@@ -186,23 +196,25 @@ server.tool(
 // Task Tools
 // ============================================================================
 
-server.tool(
+server.registerTool(
   "tasks_list",
-  "List all tasks (optionally filtered by project)",
   {
-    projectId: z
-      .number()
-      .optional()
-      .describe("Filter by project ID (if not provided, returns all tasks)"),
-    page: z.number().optional().describe("Page number for pagination (default: 1)"),
-    perPage: z.number().optional().describe("Number of items per page (default: 50)"),
-    search: z.string().optional().describe("Search tasks by text"),
-    sortBy: z
-      .string()
-      .optional()
-      .describe("Sort field: id, title, done, due_date, priority, created, updated"),
-    orderBy: z.string().optional().describe("Sort order: asc or desc"),
-    filter: z.string().optional().describe("Filter query (e.g., 'done = false')"),
+    description: "List all tasks (optionally filtered by project)",
+    inputSchema: {
+      projectId: z
+        .number()
+        .optional()
+        .describe("Filter by project ID (if not provided, returns all tasks)"),
+      page: z.number().optional().describe("Page number for pagination (default: 1)"),
+      perPage: z.number().optional().describe("Number of items per page (default: 50)"),
+      search: z.string().optional().describe("Search tasks by text"),
+      sortBy: z
+        .string()
+        .optional()
+        .describe("Sort field: id, title, done, due_date, priority, created, updated"),
+      orderBy: z.string().optional().describe("Sort order: asc or desc"),
+      filter: z.string().optional().describe("Filter query (e.g., 'done = false')"),
+    },
   },
   async (args) => {
     try {
@@ -241,11 +253,13 @@ server.tool(
   }
 );
 
-server.tool(
+server.registerTool(
   "tasks_get",
-  "Get a single task by ID",
   {
-    taskId: z.number().describe("The task ID"),
+    description: "Get a single task by ID",
+    inputSchema: {
+      taskId: z.number().describe("The task ID"),
+    },
   },
   async (args) => {
     try {
@@ -258,25 +272,27 @@ server.tool(
   }
 );
 
-server.tool(
+server.registerTool(
   "tasks_create",
-  "Create a new task in a project",
   {
-    projectId: z.number().describe("Project ID to create the task in (required)"),
-    title: z.string().describe("Task title (required)"),
-    description: z.string().optional().describe("Task description"),
-    dueDate: z
-      .string()
-      .optional()
-      .describe("Due date (ISO 8601 format, e.g., '2024-12-31T23:59:59Z')"),
-    startDate: z.string().optional().describe("Start date (ISO 8601 format)"),
-    endDate: z.string().optional().describe("End date (ISO 8601 format)"),
-    priority: z.number().optional().describe("Priority level (higher = more important)"),
-    done: z.boolean().optional().describe("Whether the task is completed"),
-    color: z.string().optional().describe("Hex color for the task"),
-    percentDone: z.number().optional().describe("Completion percentage (0-1)"),
-    assignees: z.array(z.number()).optional().describe("Array of user IDs to assign"),
-    labels: z.array(z.number()).optional().describe("Array of label IDs to add"),
+    description: "Create a new task in a project",
+    inputSchema: {
+      projectId: z.number().describe("Project ID to create the task in (required)"),
+      title: z.string().describe("Task title (required)"),
+      description: z.string().optional().describe("Task description"),
+      dueDate: z
+        .string()
+        .optional()
+        .describe("Due date (ISO 8601 format, e.g., '2024-12-31T23:59:59Z')"),
+      startDate: z.string().optional().describe("Start date (ISO 8601 format)"),
+      endDate: z.string().optional().describe("End date (ISO 8601 format)"),
+      priority: z.number().optional().describe("Priority level (higher = more important)"),
+      done: z.boolean().optional().describe("Whether the task is completed"),
+      color: z.string().optional().describe("Hex color for the task"),
+      percentDone: z.number().optional().describe("Completion percentage (0-1)"),
+      assignees: z.array(z.number()).optional().describe("Array of user IDs to assign"),
+      labels: z.array(z.number()).optional().describe("Array of label IDs to add"),
+    },
   },
   async (args) => {
     try {
@@ -307,22 +323,24 @@ server.tool(
   }
 );
 
-server.tool(
+server.registerTool(
   "tasks_update",
-  "Update an existing task",
   {
-    taskId: z.number().describe("The task ID (required)"),
-    title: z.string().optional().describe("New task title"),
-    description: z.string().optional().describe("New task description"),
-    dueDate: z.string().optional().describe("New due date (ISO 8601 format)"),
-    startDate: z.string().optional().describe("New start date (ISO 8601 format)"),
-    endDate: z.string().optional().describe("New end date (ISO 8601 format)"),
-    priority: z.number().optional().describe("New priority level"),
-    done: z.boolean().optional().describe("Mark as done or not done"),
-    color: z.string().optional().describe("New hex color"),
-    percentDone: z.number().optional().describe("New completion percentage (0-1)"),
-    projectId: z.number().optional().describe("Move task to a different project"),
-    isFavorite: z.boolean().optional().describe("Mark as favorite"),
+    description: "Update an existing task",
+    inputSchema: {
+      taskId: z.number().describe("The task ID (required)"),
+      title: z.string().optional().describe("New task title"),
+      description: z.string().optional().describe("New task description"),
+      dueDate: z.string().optional().describe("New due date (ISO 8601 format)"),
+      startDate: z.string().optional().describe("New start date (ISO 8601 format)"),
+      endDate: z.string().optional().describe("New end date (ISO 8601 format)"),
+      priority: z.number().optional().describe("New priority level"),
+      done: z.boolean().optional().describe("Mark as done or not done"),
+      color: z.string().optional().describe("New hex color"),
+      percentDone: z.number().optional().describe("New completion percentage (0-1)"),
+      projectId: z.number().optional().describe("Move task to a different project"),
+      isFavorite: z.boolean().optional().describe("Mark as favorite"),
+    },
   },
   async (args) => {
     try {
@@ -348,11 +366,13 @@ server.tool(
   }
 );
 
-server.tool(
+server.registerTool(
   "tasks_delete",
-  "Delete a task",
   {
-    taskId: z.number().describe("The task ID to delete"),
+    description: "Delete a task",
+    inputSchema: {
+      taskId: z.number().describe("The task ID to delete"),
+    },
   },
   async (args) => {
     try {
@@ -369,13 +389,15 @@ server.tool(
 // Label Tools
 // ============================================================================
 
-server.tool(
+server.registerTool(
   "labels_list",
-  "List all labels the user has access to",
   {
-    page: z.number().optional().describe("Page number for pagination"),
-    perPage: z.number().optional().describe("Number of items per page"),
-    search: z.string().optional().describe("Search labels by title"),
+    description: "List all labels the user has access to",
+    inputSchema: {
+      page: z.number().optional().describe("Page number for pagination"),
+      perPage: z.number().optional().describe("Number of items per page"),
+      search: z.string().optional().describe("Search labels by title"),
+    },
   },
   async (args) => {
     try {
@@ -392,13 +414,15 @@ server.tool(
   }
 );
 
-server.tool(
+server.registerTool(
   "labels_create",
-  "Create a new label",
   {
-    title: z.string().describe("Label title (required)"),
-    description: z.string().optional().describe("Label description"),
-    color: z.string().optional().describe("Hex color (e.g., 'ff0000')"),
+    description: "Create a new label",
+    inputSchema: {
+      title: z.string().describe("Label title (required)"),
+      description: z.string().optional().describe("Label description"),
+      color: z.string().optional().describe("Hex color (e.g., 'ff0000')"),
+    },
   },
   async (args) => {
     try {
@@ -415,11 +439,13 @@ server.tool(
   }
 );
 
-server.tool(
+server.registerTool(
   "labels_delete",
-  "Delete a label",
   {
-    labelId: z.number().describe("The label ID to delete"),
+    description: "Delete a label",
+    inputSchema: {
+      labelId: z.number().describe("The label ID to delete"),
+    },
   },
   async (args) => {
     try {
@@ -432,12 +458,14 @@ server.tool(
   }
 );
 
-server.tool(
+server.registerTool(
   "task_labels_add",
-  "Add a label to a task",
   {
-    taskId: z.number().describe("The task ID"),
-    labelId: z.number().describe("The label ID to add"),
+    description: "Add a label to a task",
+    inputSchema: {
+      taskId: z.number().describe("The task ID"),
+      labelId: z.number().describe("The label ID to add"),
+    },
   },
   async (args) => {
     try {
@@ -452,12 +480,14 @@ server.tool(
   }
 );
 
-server.tool(
+server.registerTool(
   "task_labels_remove",
-  "Remove a label from a task",
   {
-    taskId: z.number().describe("The task ID"),
-    labelId: z.number().describe("The label ID to remove"),
+    description: "Remove a label from a task",
+    inputSchema: {
+      taskId: z.number().describe("The task ID"),
+      labelId: z.number().describe("The label ID to remove"),
+    },
   },
   async (args) => {
     try {
@@ -478,11 +508,13 @@ server.tool(
 // Comment Tools
 // ============================================================================
 
-server.tool(
+server.registerTool(
   "task_comments_list",
-  "List all comments on a task",
   {
-    taskId: z.number().describe("The task ID"),
+    description: "List all comments on a task",
+    inputSchema: {
+      taskId: z.number().describe("The task ID"),
+    },
   },
   async (args) => {
     try {
@@ -495,12 +527,14 @@ server.tool(
   }
 );
 
-server.tool(
+server.registerTool(
   "task_comments_add",
-  "Add a comment to a task",
   {
-    taskId: z.number().describe("The task ID"),
-    comment: z.string().describe("The comment text"),
+    description: "Add a comment to a task",
+    inputSchema: {
+      taskId: z.number().describe("The task ID"),
+      comment: z.string().describe("The comment text"),
+    },
   },
   async (args) => {
     try {
@@ -519,11 +553,13 @@ server.tool(
 // Assignee Tools
 // ============================================================================
 
-server.tool(
+server.registerTool(
   "task_assignees_list",
-  "List all assignees on a task",
   {
-    taskId: z.number().describe("The task ID"),
+    description: "List all assignees on a task",
+    inputSchema: {
+      taskId: z.number().describe("The task ID"),
+    },
   },
   async (args) => {
     try {
@@ -536,12 +572,14 @@ server.tool(
   }
 );
 
-server.tool(
+server.registerTool(
   "task_assignees_add",
-  "Add an assignee to a task",
   {
-    taskId: z.number().describe("The task ID"),
-    userId: z.number().describe("The user ID to assign"),
+    description: "Add an assignee to a task",
+    inputSchema: {
+      taskId: z.number().describe("The task ID"),
+      userId: z.number().describe("The user ID to assign"),
+    },
   },
   async (args) => {
     try {
@@ -556,12 +594,14 @@ server.tool(
   }
 );
 
-server.tool(
+server.registerTool(
   "task_assignees_remove",
-  "Remove an assignee from a task",
   {
-    taskId: z.number().describe("The task ID"),
-    userId: z.number().describe("The user ID to remove"),
+    description: "Remove an assignee from a task",
+    inputSchema: {
+      taskId: z.number().describe("The task ID"),
+      userId: z.number().describe("The user ID to remove"),
+    },
   },
   async (args) => {
     try {
@@ -584,17 +624,19 @@ server.tool(
 // Task Relation Tools
 // ============================================================================
 
-server.tool(
+server.registerTool(
   "task_relations_add",
-  "Create a relation between two tasks",
   {
-    taskId: z.number().describe("The source task ID"),
-    otherTaskId: z.number().describe("The target task ID"),
-    relationKind: z
-      .string()
-      .describe(
-        "Relation type: subtask, parenttask, related, duplicateof, duplicates, blocking, blocked, precedes, follows, copiedfrom, copiedto"
-      ),
+    description: "Create a relation between two tasks",
+    inputSchema: {
+      taskId: z.number().describe("The source task ID"),
+      otherTaskId: z.number().describe("The target task ID"),
+      relationKind: z
+        .string()
+        .describe(
+          "Relation type: subtask, parenttask, related, duplicateof, duplicates, blocking, blocked, precedes, follows, copiedfrom, copiedto"
+        ),
+    },
   },
   async (args) => {
     try {
@@ -610,13 +652,15 @@ server.tool(
   }
 );
 
-server.tool(
+server.registerTool(
   "task_relations_remove",
-  "Remove a relation between two tasks",
   {
-    taskId: z.number().describe("The source task ID"),
-    otherTaskId: z.number().describe("The target task ID"),
-    relationKind: z.string().describe("Relation type to remove"),
+    description: "Remove a relation between two tasks",
+    inputSchema: {
+      taskId: z.number().describe("The source task ID"),
+      otherTaskId: z.number().describe("The target task ID"),
+      relationKind: z.string().describe("Relation type to remove"),
+    },
   },
   async (args) => {
     try {
@@ -635,11 +679,13 @@ server.tool(
 // Project View Tools
 // ============================================================================
 
-server.tool(
+server.registerTool(
   "project_views_list",
-  "List all views for a project",
   {
-    projectId: z.number().describe("The project ID"),
+    description: "List all views for a project",
+    inputSchema: {
+      projectId: z.number().describe("The project ID"),
+    },
   },
   async (args) => {
     try {
@@ -656,12 +702,14 @@ server.tool(
 // Bucket (Kanban) Tools
 // ============================================================================
 
-server.tool(
+server.registerTool(
   "buckets_list",
-  "List all kanban buckets for a project view",
   {
-    projectId: z.number().describe("The project ID"),
-    viewId: z.number().describe("The project view ID (must be a kanban view)"),
+    description: "List all kanban buckets for a project view",
+    inputSchema: {
+      projectId: z.number().describe("The project ID"),
+      viewId: z.number().describe("The project view ID (must be a kanban view)"),
+    },
   },
   async (args) => {
     try {
@@ -676,14 +724,16 @@ server.tool(
   }
 );
 
-server.tool(
+server.registerTool(
   "buckets_create",
-  "Create a new kanban bucket",
   {
-    projectId: z.number().describe("The project ID"),
-    viewId: z.number().describe("The project view ID (must be a kanban view)"),
-    title: z.string().describe("Bucket title"),
-    limit: z.number().optional().describe("Max tasks in bucket (0 = unlimited)"),
+    description: "Create a new kanban bucket",
+    inputSchema: {
+      projectId: z.number().describe("The project ID"),
+      viewId: z.number().describe("The project view ID (must be a kanban view)"),
+      title: z.string().describe("Bucket title"),
+      limit: z.number().optional().describe("Max tasks in bucket (0 = unlimited)"),
+    },
   },
   async (args) => {
     try {
@@ -702,13 +752,15 @@ server.tool(
   }
 );
 
-server.tool(
+server.registerTool(
   "buckets_delete",
-  "Delete a kanban bucket",
   {
-    projectId: z.number().describe("The project ID"),
-    viewId: z.number().describe("The project view ID"),
-    bucketId: z.number().describe("The bucket ID to delete"),
+    description: "Delete a kanban bucket",
+    inputSchema: {
+      projectId: z.number().describe("The project ID"),
+      viewId: z.number().describe("The project view ID"),
+      bucketId: z.number().describe("The bucket ID to delete"),
+    },
   },
   async (args) => {
     try {
@@ -723,15 +775,17 @@ server.tool(
   }
 );
 
-server.tool(
+server.registerTool(
   "task_move_to_bucket",
-  "Move a task to a different kanban bucket",
   {
-    projectId: z.number().describe("The project ID"),
-    viewId: z.number().describe("The project view ID"),
-    bucketId: z.number().describe("The target bucket ID"),
-    taskId: z.number().describe("The task ID to move"),
-    position: z.number().optional().describe("Position within the bucket"),
+    description: "Move a task to a different kanban bucket",
+    inputSchema: {
+      projectId: z.number().describe("The project ID"),
+      viewId: z.number().describe("The project view ID"),
+      bucketId: z.number().describe("The target bucket ID"),
+      taskId: z.number().describe("The task ID to move"),
+      position: z.number().optional().describe("Position within the bucket"),
+    },
   },
   async (args) => {
     try {
@@ -754,13 +808,15 @@ server.tool(
 // Team Tools
 // ============================================================================
 
-server.tool(
+server.registerTool(
   "teams_list",
-  "List all teams the user belongs to",
   {
-    page: z.number().optional().describe("Page number for pagination"),
-    perPage: z.number().optional().describe("Number of items per page"),
-    search: z.string().optional().describe("Search teams by name"),
+    description: "List all teams the user belongs to",
+    inputSchema: {
+      page: z.number().optional().describe("Page number for pagination"),
+      perPage: z.number().optional().describe("Number of items per page"),
+      search: z.string().optional().describe("Search teams by name"),
+    },
   },
   async (args) => {
     try {
@@ -781,11 +837,13 @@ server.tool(
 // User Tools
 // ============================================================================
 
-server.tool(
+server.registerTool(
   "users_search",
-  "Search for users by username, name, or email",
   {
-    search: z.string().describe("Search term (required)"),
+    description: "Search for users by username, name, or email",
+    inputSchema: {
+      search: z.string().describe("Search term (required)"),
+    },
   },
   async (args) => {
     try {
@@ -804,12 +862,14 @@ server.tool(
 // Notification Tools
 // ============================================================================
 
-server.tool(
+server.registerTool(
   "notifications_list",
-  "List all notifications for the current user",
   {
-    page: z.number().optional().describe("Page number for pagination"),
-    perPage: z.number().optional().describe("Number of items per page"),
+    description: "List all notifications for the current user",
+    inputSchema: {
+      page: z.number().optional().describe("Page number for pagination"),
+      perPage: z.number().optional().describe("Number of items per page"),
+    },
   },
   async (args) => {
     try {
@@ -828,6 +888,7 @@ server.tool(
 // Start the server
 async function main() {
   const transport = new StdioServerTransport();
+  // const transport = new StreamableHTTPServerTransport();
   await server.connect(transport);
   console.error("Vikunja MCP server started");
 }

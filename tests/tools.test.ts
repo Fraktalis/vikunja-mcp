@@ -31,8 +31,8 @@ const registeredTools: Map<string, { schema: unknown; handler: ToolHandler }> = 
 // Mock the MCP SDK
 vi.mock("@modelcontextprotocol/sdk/server/mcp.js", () => ({
   McpServer: class MockMcpServer {
-    tool(name: string, _description: string, schema: unknown, handler: ToolHandler) {
-      registeredTools.set(name, { schema, handler });
+    registerTool(name: string, config: { description: string; inputSchema?: unknown }, handler: ToolHandler) {
+      registeredTools.set(name, { schema: config.inputSchema, handler });
     }
     connect() {
       return Promise.resolve();
@@ -73,8 +73,8 @@ describe("MCP Tool Handlers", () => {
 
     vi.doMock("@modelcontextprotocol/sdk/server/mcp.js", () => ({
       McpServer: class MockMcpServer {
-        tool(name: string, _description: string, schema: unknown, handler: ToolHandler) {
-          registeredTools.set(name, { schema, handler });
+        registerTool(name: string, config: { description: string; inputSchema?: unknown }, handler: ToolHandler) {
+          registeredTools.set(name, { schema: config.inputSchema, handler });
         }
         connect() {
           return Promise.resolve();
