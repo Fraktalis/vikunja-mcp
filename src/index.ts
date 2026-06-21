@@ -903,6 +903,25 @@ async function main() {
   const AUTH_TOKEN = process.env.MCP_AUTH_TOKEN;
 
   const app = createMcpExpressApp({ host: HOST });
+
+  // CORS — required for browser-initiated OAuth token exchange (e.g. MCP Inspector)
+  app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET, POST, DELETE, OPTIONS"
+    );
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization, Mcp-Session-Id, Accept"
+    );
+    if (req.method === "OPTIONS") {
+      res.sendStatus(204);
+      return;
+    }
+    next();
+  });
+
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
