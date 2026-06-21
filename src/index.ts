@@ -1,8 +1,14 @@
 #!/usr/bin/env node
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
 import { z } from "zod";
+import express from "express";
+import { timingSafeEqual } from "crypto";
+import { join } from "path";
+import { homedir } from "os";
+import { mountPasswordAuth, type AuthHandle } from "./auth.js";
 import { getClient } from "./vikunja-client.js";
 import type {
   Project,
@@ -18,6 +24,7 @@ import type {
   Message,
 } from "./types.js";
 
+function createVikunjaServer(): McpServer {
 // Create MCP server
 const server = new McpServer({
   name: "vikunja",
@@ -885,12 +892,104 @@ server.registerTool(
   }
 );
 
+  return server;
+}
+
 // Start the server
 async function main() {
-  const transport = new StdioServerTransport();
-  // const transport = new StreamableHTTPServerTransport();
-  await server.connect(transport);
-  console.error("Vikunja MCP server started");
+  const PORT = parseInt(process.env.PORT ?? "3000");
+  const HOST = process.env.HOST ?? "127.0.0.1";
+  const BASE_URL = process.env.BASE_URL ?? `http://${HOST}:${PORT}`;
+  const AUTH_TOKEN = process.env.MCP_AUTH_TOKEN;
+
+  const app = createMcpExpressApp({ host: HOST });
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
+
+  // Mount OAuth routes if auth is enabled
+  let authHandle: AuthHandle | null = null;
+  if (AUTH_TOKEN) {
+    const dataDir = process.env.DATA_DIR ?? join(homedir(), ".vikunja-mcp");
+    const tokenPath = join(dataDir, "auth-tokens.json");
+    authHandle = mountPasswordAuth(app, BASE_URL, AUTH_TOKEN, tokenPath);
+    await authHandle.loadTokens();
+    console.error("Auth enabled (password-gated OAuth).");
+  } else {
+    if (HOST === "0.0.0.0") {
+      console.error(
+        "WARNING: No authentication and listening on all interfaces. Set MCP_AUTH_TOKEN or HOST=127.0.0.1."
+      );
+    } else {
+      console.error("Auth disabled (set MCP_AUTH_TOKEN to enable).");
+    }
+  }
+
+  // Auth middleware for /mcp endpoint
+  app.use("/mcp", (req, res, next) => {
+    if (!AUTH_TOKEN) {
+      next();
+      return;
+    }
+    const header = req.headers["authorization"];
+    const expected = `Bearer ${AUTH_TOKEN}`;
+    if (
+      header &&
+      header.length === expected.length &&
+      timingSafeEqual(Buffer.from(header), Buffer.from(expected))
+    ) {
+      next();
+      return;
+    }
+    if (authHandle?.validateToken(header)) {
+      next();
+      return;
+    }
+    res.status(401).json({ error: "Unauthorized" });
+  });
+
+  // Streamable HTTP MCP endpoint
+  const handleMcp = async (
+    req: express.Request,
+    res: express.Response
+  ): Promise<void> => {
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: undefined, // stateless mode — new server per request
+    });
+    res.on("close", () => {
+      transport.close().catch(() => undefined);
+    });
+    const mcpServer = createVikunjaServer();
+    await mcpServer.connect(transport);
+    await transport.handleRequest(req, res, req.body);
+  };
+
+  app.post("/mcp", handleMcp);
+  app.get("/mcp", handleMcp);
+  app.delete("/mcp", handleMcp);
+
+  // Periodic token cleanup
+  if (authHandle) {
+    setInterval(() => {
+      authHandle!.cleanup();
+      authHandle!.saveTokens().catch(console.error);
+    }, 5 * 60 * 1000).unref();
+  }
+
+  // Graceful shutdown
+  const shutdown = async () => {
+    if (authHandle) await authHandle.saveTokens();
+    process.exit(0);
+  };
+  process.on("SIGTERM", shutdown);
+  process.on("SIGINT", shutdown);
+
+  app.listen(PORT, HOST, () => {
+    console.error(`Vikunja MCP server listening on http://${HOST}:${PORT}`);
+    console.error(`MCP endpoint: http://${HOST}:${PORT}/mcp`);
+    if (AUTH_TOKEN) {
+      console.error(`OAuth: ${BASE_URL}/.well-known/oauth-authorization-server`);
+    }
+  });
 }
 
 main().catch((error) => {
